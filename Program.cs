@@ -25,6 +25,8 @@ namespace cse210_student_csharp_galaga
             Step step = new Step(MovementSpeed, Enemies, ScreenHeight, ScreenWidth, RectangleSize, count, score);
             Player player = new Player(MovementSpeed, PlayerRectangle, RectangleSize, step);
 
+            Raylib.InitWindow(ScreenWidth, ScreenHeight, "Greed");
+            Raylib.SetTargetFPS(60);
 
             while (!Raylib.WindowShouldClose())
             {
@@ -133,14 +135,11 @@ namespace cse210_student_csharp_galaga
     }
     //public class ButterflyE : ColoredObjects
     //{
-//
     //}
     //public class BeeE : ColoredObjects
     //{
-//
     //}
     //public class Bolt : ColoredObjects
     //{
-//
     //}
-}//
+}
