@@ -133,12 +133,13 @@ namespace cse210_student_csharp_galaga
             var position = new Vector2(0, 0);
             var objectsToRemove = new List<Movement>();
 
-            if (Count != 7)
+            if (Count <= 7)
             {
                 CreateEnemies(0, setVelocity, position, Size);
-                Count += 1;
+                CreateEnemies(0, setVelocity, position, Size);
+                Count += 2;
             }
-            if (Count != 7)
+            if (Count <= 7)
             {
                 CreateEnemies(1, setVelocity, position, Size);
                 Count += 1;
@@ -202,7 +203,6 @@ namespace cse210_student_csharp_galaga
             //            }
             //        }   
             //    }
-//
             //}
             foreach (var obj in Enemies)
             {
@@ -255,7 +255,7 @@ namespace cse210_student_csharp_galaga
         }
         public Vector2 findSpawnPosition()
         {
-            Vector2 firstPosition = new Vector2(70, 200);
+            Vector2 firstPosition = new Vector2(64, 200);
             Vector2 spawnPosition = new Vector2(0, 0);
             if (whichPosition <= 10)
             {
