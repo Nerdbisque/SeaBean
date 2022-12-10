@@ -18,14 +18,17 @@ namespace cse210_student_csharp_galaga
             int MovementSpeed = 5;
             int count = 0;
             int score = 0;
+            int Lives = 3;
             var Enemies = new List<Movement>();
+            var Rand = new Random();
             bool playGame = true;
-            int whichPosition = 0;
+            int whichPosition = 1;
 
             Rectangle PlayerRectangle = new Rectangle(ScreenWidth / 2, ScreenHeight - 100, RectangleSize, RectangleSize);
 
-            Step step = new Step(MovementSpeed, Enemies, ScreenHeight, ScreenWidth, RectangleSize, count, score, whichPosition);
-            Player player = new Player(MovementSpeed, PlayerRectangle, RectangleSize, step);
+            Step step = new Step(MovementSpeed, Enemies, ScreenHeight, ScreenWidth, RectangleSize, count, score, 
+            whichPosition, Lives, Rand);
+            Player player = new Player(MovementSpeed, PlayerRectangle, RectangleSize, step, Rand);
 
             Raylib.InitWindow(ScreenWidth, ScreenHeight, "GALAGA");
             Raylib.SetTargetFPS(60);
@@ -34,6 +37,9 @@ namespace cse210_student_csharp_galaga
             {
                 Raylib.BeginDrawing();
                 Raylib.ClearBackground(Color.BLACK);
+
+                step.newScore();
+                step.newLives();
                 if (!playGame)
                 {
                     player.Input();
@@ -53,17 +59,19 @@ namespace cse210_student_csharp_galaga
     }
     public class Player
     {
-        public Player(int MovementSpeed, Rectangle Player, int size, Step step)
+        public Player(int MovementSpeed, Rectangle Player, int size, Step step, Random rand)
         {
             PlayerRectangle = Player;
             Speed = MovementSpeed;
             Size = size; 
             steps = step;
+            Rand = rand;
         }
         public Rectangle PlayerRectangle;
         int Speed;
         int Size;
         Step steps;
+        Random Rand;
         
         public void Input()
         {
@@ -88,7 +96,7 @@ namespace cse210_student_csharp_galaga
             if (Raylib.IsKeyPressed(KeyboardKey.KEY_SPACE))
             {
                 // Object Reference Not found
-                steps.CreateEnemies(2, -Speed, boltPosition, Size);
+                steps.CreateEnemies(2, -10, boltPosition, Size, Rand);
             }
         }
         public bool startGame(bool playGame)
@@ -107,7 +115,8 @@ namespace cse210_student_csharp_galaga
     }
     public class Step
     {
-        public Step(int MovementSpeed, List<Movement> enemies, int ScreenHeight, int ScreenWidth, int RectangleSize, int count, int score, int WhichPosition)
+        public Step(int MovementSpeed, List<Movement> enemies, int ScreenHeight, int ScreenWidth,
+        int RectangleSize, int count, int score, int WhichPosition, int lives, Random Rand)
         {
             Speed = MovementSpeed;
             Enemies = enemies; 
@@ -115,8 +124,13 @@ namespace cse210_student_csharp_galaga
             Width = ScreenWidth;
             Size = RectangleSize;
             Count = count;
+            Count2 = count;
             Score = score;
-            whichPosition = WhichPosition;
+            Lives = lives;
+            whichXPosition = WhichPosition;
+            whichYPosition = WhichPosition;
+            rand = Rand;
+
         }
         int Speed;
         List<Movement> Enemies;
@@ -124,28 +138,56 @@ namespace cse210_student_csharp_galaga
         int Width;
         int Size;
         int Count;
+        int Count2;
         int Score;
-        int whichPosition;
+        int Lives;
+        int whichXPosition;
+        int whichYPosition;
+        Random rand;
 
         public void Instance(Rectangle PlayerRectangle)
         {
             int setVelocity = 0;
             var position = new Vector2(0, 0);
+            int whichType = rand.Next(2);
             var objectsToRemove = new List<Movement>();
-
-            if (Count <= 7)
+            if (whichXPosition < 9)
             {
-                CreateEnemies(0, setVelocity, position, Size);
-                CreateEnemies(0, setVelocity, position, Size);
-                Count += 2;
+                CreateEnemies(whichType, setVelocity, position, Size, rand);
             }
-            if (Count <= 7)
+            if (whichXPosition >= 9)
             {
-                CreateEnemies(1, setVelocity, position, Size);
+                Count2 = 0;
+                foreach (var obj in Enemies) 
+                {
+                    if(obj is BeeE)
+                    {
+                        Count2 += 1;
+                        Console.WriteLine(Count2);
+                    }
+                    else if (obj is ButterflyE)
+                    {
+                        Count2 += 1;
+                        Console.WriteLine(Count2);
+                    }
+                }
+                if (Count2 == 0)
+                {
+                    whichXPosition = 1;
+                }
+            }
+
+            // Make Background Pixels
+            if (Count == 5)
+            {
+                CreateEnemies(3, setVelocity, position, Size, rand);
+                Count = 0;
+            }
+            else
+            {
                 Count += 1;
             }
-
-
+            
             foreach (var obj in Enemies) 
             {
                 obj.Draw();
@@ -155,83 +197,105 @@ namespace cse210_student_csharp_galaga
             {
                 obj.Move();
             }
-            //// Check for Collisions
-            //foreach (var obj in Enemies)
-            //{
-            //    if(obj is Rock)
-            //    {
-            //        Rock rock = (Rock)obj;
-            //        if (Raylib.CheckCollisionRecs(rock.eachRectangle(), PlayerRectangle)) 
-            //        {
-            //            subScore(1);
-            //            objectsToRemove.Add(obj);
-            //        }
-            //        foreach (var col in objects)
-            //        {
-            //            if (col is Bolt)
-            //            {
-            //                Bolt bolt = (Bolt)col;
-            //                if (Raylib.CheckCollisionRecs(bolt.eachboltRectangle(), rock.eachRectangle()))
-            //                {
-            //                    addScore(2);
-            //                    objectsToRemove.Add(obj);
-            //                    objectsToRemove.Add(col);
-            //                }
-            //            }
-            //        }   
-            //    }
-            //    else if (obj is Gem)
-            //    {
-            //        
-            //        Gem gem = (Gem)obj;
-            //        if (Raylib.CheckCollisionCircleRec(gem.Position, gem.Radius, PlayerRectangle)) 
-            //        {
-            //            addScore(1);
-            //            objectsToRemove.Add(obj);
-            //        }  
-            //        foreach (var col in objects)
-            //        {
-            //            if (col is Bolt)
-            //            {
-            //                Bolt bolt = (Bolt)col;
-            //                if (Raylib.CheckCollisionCircleRec(gem.Position, gem.Radius, bolt.eachboltRectangle()))
-            //                {
-            //                    subScore(2);
-            //                    objectsToRemove.Add(obj);
-            //                    objectsToRemove.Add(col);
-            //                }
-            //            }
-            //        }   
-            //    }
-            //}
+            // Check for Collisions
+            foreach (var obj in Enemies)
+            {
+                if(obj is BeeE)
+                {
+                    BeeE beeE = (BeeE)obj;
+                    if (Raylib.CheckCollisionRecs(beeE.eachRectangle(), PlayerRectangle)) 
+                    {
+                        subLives(1);
+                        objectsToRemove.Add(obj);
+                    }
+                    foreach (var col in Enemies)
+                    {
+                        if (col is Bolt)
+                        {
+                            Bolt bolt = (Bolt)col;
+                            if (Raylib.CheckCollisionRecs(bolt.eachboltRectangle(), beeE.eachRectangle()))
+                            {
+                                addScore(50);
+                                objectsToRemove.Add(obj);
+                                objectsToRemove.Add(col);
+                            }
+                        }
+                    }   
+                }
+                else if (obj is ButterflyE)
+                {
+                    
+                    ButterflyE butterflyE = (ButterflyE)obj;
+                    if (Raylib.CheckCollisionRecs(butterflyE.eachRectangle(), PlayerRectangle)) 
+                    {
+                        subLives(1);
+                        objectsToRemove.Add(obj);
+                    }  
+                    foreach (var col in Enemies)
+                    {
+                        if (col is Bolt)
+                        {
+                            Bolt bolt = (Bolt)col;
+                            if (Raylib.CheckCollisionRecs(bolt.eachboltRectangle(), butterflyE.eachRectangle()))
+                            {
+                                addScore(80);
+                                objectsToRemove.Add(obj);
+                                objectsToRemove.Add(col);
+                            }
+                        }
+                    }   
+                }
+            }
             foreach (var obj in Enemies)
             {
                 if (obj.Position.Y > Height + 30)
                 {
                     objectsToRemove.Add(obj);
                 }
-                if (obj.Position.Y <  -30)
+                if (obj.Position.Y < -30)
                 {
                     objectsToRemove.Add(obj);
                 }
             }
             Enemies = Enemies.Except(objectsToRemove).ToList();
         }
+        public void addScore(int value)
+        {
+            Score += value;
+        }
+        // method for decreasing player's score 
+        public void subLives(int value)
+        {
+            Lives -= value;
+        }
+        // Method for displaying score 
+        public void newScore()
+        {
+            int returnScore = Score;
+            Raylib.DrawText("Score: " + returnScore , 12, 12, 20, Color.WHITE);
+        }
+        public void newLives()
+        {
+            int returnLives = Lives;
+            Raylib.DrawText("Lives: " + returnLives , 12, 750, 20, Color.WHITE);
+        }
 
-        public void CreateEnemies(int whichType, int setVelocity, Vector2 position, int Size)
+        public void CreateEnemies(int whichType, int setVelocity, Vector2 position, int Size, Random Rand)
         {
             switch (whichType) 
                 {
                 case 0:
                     var butter = new ButterflyE(Color.GREEN, Size);
                     butter.Position = findSpawnPosition();
-                    butter.Velocity = new Vector2(0, 0);
+                    butter.Velocity = new Vector2(1, 0);
+                    butter.originalPosition = new Vector2(butter.Position.X, butter.Position.Y);
                     Enemies.Add(butter);
                     break;
                 case 1:
                     var bee = new BeeE(Color.BLUE, Size);
                     bee.Position =  findSpawnPosition();
-                    bee.Velocity = new Vector2(0, 0);
+                    bee.Velocity = new Vector2(1, 0);
+                    bee.originalPosition = new Vector2(bee.Position.X, bee.Position.Y);
                     Enemies.Add(bee);
                     break;
                 case 2:
@@ -251,20 +315,38 @@ namespace cse210_student_csharp_galaga
                         Enemies.Add(bolt);
                     }
                     break;
+                case 3:
+                    int randomX = Rand.Next(0, Width - Size);
+
+                    var pixel = new BPixels(GenerateColor(), Size);
+                    pixel.Position = new Vector2(randomX, 0 - Size);
+                    pixel.Velocity = new Vector2(0, 6);
+                    Enemies.Add(pixel);
+                    break;
                 }
         }
         public Vector2 findSpawnPosition()
         {
             Vector2 firstPosition = new Vector2(64, 200);
             Vector2 spawnPosition = new Vector2(0, 0);
-            if (whichPosition <= 10)
-            {
-                float xPosition = firstPosition.X * (whichPosition + 1);
-                float yPosition = firstPosition.Y;
-                spawnPosition = new Vector2(xPosition, yPosition);
-            }
-            whichPosition += 1;
+
+            float xPosition = firstPosition.X * (whichXPosition);
+            float yPosition = firstPosition.Y;
+            spawnPosition = new Vector2(xPosition, yPosition);
+
+            whichXPosition += 1;
+            Console.WriteLine(whichXPosition);
             return(spawnPosition);
+        }
+        private Color GenerateColor()
+        {
+            var Random = new Random();
+            Color[] Colors = {Color.SKYBLUE, Color.BROWN, Color.BEIGE,Color.DARKPURPLE, Color.VIOLET, Color.PURPLE, Color.DARKBLUE, Color.BLUE, 
+                        Color.BLACK, Color.DARKGREEN, Color.LIME, Color.GREEN, Color.MAROON, Color.RED, Color.PINK, Color.ORANGE, Color.GOLD, Color.YELLOW,
+                        Color.DARKGRAY, Color.GRAY, Color.LIGHTGRAY, Color.BLANK, Color.MAGENTA, Color.RAYWHITE, Color.DARKBROWN, Color.WHITE}; 
+            var randomColorNumber = Random.Next(0, Colors.Length);
+            Color randomColor = Colors[randomColorNumber];
+            return randomColor;
         }
     }
     
@@ -272,7 +354,7 @@ namespace cse210_student_csharp_galaga
     {
         public Vector2 Position { get; set; } = new Vector2(0,0);
         public Vector2 Velocity { get; set; } = new Vector2(0,0);
-
+        public Vector2 originalPosition { get; set; } = new Vector2(0,0);
         virtual public void Draw() 
         {
             // Base game object do not have anything to draw.
@@ -280,8 +362,6 @@ namespace cse210_student_csharp_galaga
 
         public void Move()
         { //Randomized falling movement and synchronized side to side.
-            Vector2 FirstPosition = Position;
-            
             Vector2 NewPosition = Position;
             NewPosition.Y += Velocity.Y;
             Position = NewPosition;
@@ -292,19 +372,20 @@ namespace cse210_student_csharp_galaga
         public Color Color { get; set; }
         public ColoredObjects(Color color) { Color = color; }
     }
-    public class Enemylist
-    {
-
-    }
     public class ButterflyE : ColoredObjects
     {
         public int Size { get; set; }
-        public ButterflyE(Color color, int size): base(color) 
+        public ButterflyE(Color color, int size): base(color)
         {
             Size = size;
         }
         override public void Draw() {
             Raylib.DrawRectangle((int)Position.X, (int)Position.Y, Size, Size, Color);
+        }
+        public Rectangle eachRectangle()
+        {
+            Rectangle ownedRectangle = new Rectangle((int)Position.X, (int)Position.Y, Size, Size);
+            return ownedRectangle;
         }
     }
     public class BeeE : ColoredObjects
@@ -316,6 +397,11 @@ namespace cse210_student_csharp_galaga
         }
         override public void Draw() {
             Raylib.DrawRectangle((int)Position.X, (int)Position.Y, Size, Size, Color);
+        }
+        public Rectangle eachRectangle()
+        {
+            Rectangle ownedRectangle = new Rectangle((int)Position.X, (int)Position.Y, Size, Size);
+            return ownedRectangle;
         }
     }
     public class Bolt : ColoredObjects
@@ -332,6 +418,17 @@ namespace cse210_student_csharp_galaga
         {
             Rectangle ownedboltRectangle = new Rectangle((int)Position.X, (int)Position.Y, Size/3, (Size+(Size/3))/2);
             return ownedboltRectangle;
+        }
+    }
+    public class BPixels : ColoredObjects 
+    {
+        public int Size { get; set; }
+        public BPixels(Color color, int size): base(color) 
+        {
+            Size = size;
+        }
+        override public void Draw() {
+            Raylib.DrawRectangle((int)Position.X, (int)Position.Y, Size/7, Size/7, Color);
         }
     }
 }
